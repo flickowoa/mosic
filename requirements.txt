@@ -1,1 +1,2 @@
 fastapi[standard]==0.122
+pydantic-settings==2.12
