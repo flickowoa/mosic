@@ -1,5 +1,6 @@
 from pathlib import Path
 import mimetypes
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.concurrency import run_in_threadpool
@@ -8,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
 from app.core.config import settings
-from app.models.song import Song
+from app.models.song import Song, SongCreateError
 from app.models.stats import PlayCount
 from app.core.media import (
     extract_audio_metadata,
@@ -18,6 +19,7 @@ from app.core.media import (
 
 router = APIRouter(prefix="/play", tags=["play"])
 ALLOWED_AUDIO_TYPES = {mime.lower() for mime in settings.ALLOWED_AUDIO_MIME_TYPES}
+logger = logging.getLogger(__name__)
 
 
 @router.get("/")
@@ -86,8 +88,13 @@ async def upload_song(
             duration=duration,
             audio_url=audio_url,
         )
+    except SongCreateError as exc:
+        saved_path.unlink(missing_ok=True)
+        logger.exception("Song persistence failed for %s", saved_path)
+        raise HTTPException(status_code=409, detail="Song already exists") from exc
     except Exception as exc:  # pragma: no cover - safeguards tests
         saved_path.unlink(missing_ok=True)
+        logger.exception("Unhandled upload failure for %s", saved_path)
         raise HTTPException(
             status_code=500, detail="Failed to save song metadata"
         ) from exc

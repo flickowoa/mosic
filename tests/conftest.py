@@ -10,7 +10,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 import pytest
 from fastapi import FastAPI
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from starlette.routing import Mount
 
@@ -77,9 +77,8 @@ async def client(
     media_path.mkdir(parents=True, exist_ok=True)
     _update_media_mount(fastapi_app, media_path)
 
-    async with AsyncClient(
-        app=fastapi_app, base_url="http://testserver"
-    ) as test_client:
+    transport = ASGITransport(app=fastapi_app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as test_client:
         yield test_client
 
     fastapi_app.dependency_overrides.pop(get_db, None)

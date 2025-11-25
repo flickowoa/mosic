@@ -5,7 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class PlayCount(Base):
@@ -28,9 +28,17 @@ class PlayCount(Base):
 
     @classmethod
     async def increment_count(cls, session: AsyncSession, playcount_id: str) -> None:
-        playcount = await cls.get_by_id(session, playcount_id)
-        playcount.count += 1
-        session.add(playcount)
+        stmt = select(cls).where(cls.id == playcount_id).with_for_update()
+        result = await session.execute(stmt)
+        playcount = result.scalar_one_or_none()
+
+        if playcount is None:
+            playcount = cls(id=playcount_id, count=1)
+            session.add(playcount)
+        else:
+            playcount.count += 1
+            session.add(playcount)
+
         await session.commit()
 
 
@@ -43,6 +51,4 @@ class PlayCountBase(BaseModel):
 
 class PlayCountRead(PlayCountBase):
     id: str
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

@@ -8,7 +8,11 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+
+
+class SongCreateError(RuntimeError):
+    """Raised when persisting a Song fails."""
 
 
 class Song(Base):
@@ -51,7 +55,14 @@ class Song(Base):
             title=title, description=description, duration=duration, audio_url=audio_url
         )
         session.add(song)
-        await session.commit()
+        try:
+            await session.commit()
+        except IntegrityError as exc:
+            await session.rollback()
+            raise SongCreateError("Failed to persist song") from exc
+        except Exception:
+            await session.rollback()
+            raise
         await session.refresh(song)
         return song
 
@@ -72,6 +83,4 @@ class SongCreate(SongBase):
 
 class SongRead(SongBase):
     id: str
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

@@ -15,9 +15,57 @@ def _media_contents() -> list[Path]:
 
 
 @pytest.mark.anyio
+async def test_list_songs_returns_persisted_entries(client, session_factory):
+    async with session_factory() as session:
+        first = Song(
+            id="song-1",
+            title="First",
+            description="Desc",
+            duration=10,
+            audio_url="/media/first.mp3",
+        )
+        second = Song(
+            id="song-2",
+            title="Second",
+            description=None,
+            duration=20,
+            audio_url="/media/second.mp3",
+        )
+        session.add_all([first, second])
+        await session.commit()
+
+    response = await client.get("/play/")
+    assert response.status_code == 200
+    payload = response.json()
+    assert {song["id"] for song in payload} == {"song-1", "song-2"}
+
+
+@pytest.mark.anyio
 async def test_get_song_stats_requires_existing_song(client):
     response = await client.get("/play/nonexistent/stats")
     assert response.status_code == 404
+
+
+@pytest.mark.anyio
+async def test_get_song_stats_returns_playcount(client, session_factory):
+    song_id = "stats-song"
+
+    async with session_factory() as session:
+        song = Song(
+            id=song_id,
+            title="Stats",
+            description=None,
+            duration=5,
+            audio_url="/media/stats.mp3",
+        )
+        session.add(song)
+        await session.commit()
+
+    response = await client.get(f"/play/{song_id}/stats")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["id"] == song_id
+    assert payload["count"] == 0
 
 
 @pytest.mark.anyio
