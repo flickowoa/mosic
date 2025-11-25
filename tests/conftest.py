@@ -78,7 +78,9 @@ async def client(
     _update_media_mount(fastapi_app, media_path)
 
     transport = ASGITransport(app=fastapi_app)
-    async with AsyncClient(transport=transport, base_url="http://testserver") as test_client:
+    async with AsyncClient(
+        transport=transport, base_url="http://testserver"
+    ) as test_client:
         yield test_client
 
     fastapi_app.dependency_overrides.pop(get_db, None)
