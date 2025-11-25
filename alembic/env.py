@@ -17,7 +17,7 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-from app import models
+from app.models import song, stats
 from app.core.config import settings
 from app.core.db import Base
 
