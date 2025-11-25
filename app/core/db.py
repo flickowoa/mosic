@@ -29,8 +29,9 @@ class DatabaseSessionManager:
         self._engine: AsyncEngine | None = None
         self._sessionmaker: async_sessionmaker | None = None
 
-    def init(self, host: str, engine_kwargs: dict[str, Any] = {}):
-        self._engine = create_async_engine(host, **engine_kwargs)
+    def init(self, host: str, engine_kwargs: dict[str, Any] | None = None):
+        kwargs = engine_kwargs or {}
+        self._engine = create_async_engine(host, **kwargs)
         self._sessionmaker = async_sessionmaker(autocommit=False, bind=self._engine)
 
     async def close(self):

@@ -7,6 +7,7 @@ class Settings(BaseSettings):
         env_file=".env", env_file_encoding="utf-8", env_prefix="MOSIC_"
     )
     APP_NAME: str = "Mosic"
+    APP_PORT: int = 8000
 
     DB_HOST: str = "db"
     DB_PORT: int = 5432
@@ -22,7 +23,7 @@ class Settings(BaseSettings):
         if self.DATABASE_URL_OVERRIDE:
             return self.DATABASE_URL_OVERRIDE
         return (
-            f"postgresql+psycopg://{self.DB_USER}:{self.DB_PASSWORD}"
+            f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}"
             f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
 
