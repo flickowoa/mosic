@@ -86,9 +86,11 @@ async def upload_song(
             duration=duration,
             audio_url=audio_url,
         )
-    except Exception:
+    except Exception as exc:  # pragma: no cover - safeguards tests
         saved_path.unlink(missing_ok=True)
-        raise
+        raise HTTPException(
+            status_code=500, detail="Failed to save song metadata"
+        ) from exc
 
     return song
 
