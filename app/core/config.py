@@ -19,6 +19,15 @@ class Settings(BaseSettings):
     ECHO_SQL: bool = False
     MEDIA_ROOT: str = "media"
     MEDIA_URL: str = "/media"
+    MAX_UPLOAD_MB: int = 20
+    ALLOWED_AUDIO_MIME_TYPES: tuple[str, ...] = (
+        "audio/mpeg",
+        "audio/mp3",
+        "audio/wav",
+        "audio/x-wav",
+        "audio/flac",
+        "audio/ogg",
+    )
     DATABASE_URL_OVERRIDE: str | None = None
 
     @computed_field(return_type=str)
@@ -44,6 +53,11 @@ class Settings(BaseSettings):
             value = f"/{value}"
         path = value.rstrip("/")
         return path or "/media"
+
+    @computed_field(return_type=int)
+    @property
+    def max_upload_bytes(self) -> int:
+        return max(self.MAX_UPLOAD_MB, 1) * 1024 * 1024
 
 
 settings = Settings()

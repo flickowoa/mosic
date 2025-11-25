@@ -6,10 +6,17 @@ from typing import Iterable
 from uuid import uuid4
 
 from fastapi import UploadFile
+from fastapi.concurrency import run_in_threadpool
 from mutagen._file import File
 from mutagen._util import MutagenError
 
 _CHUNK_SIZE = 1024 * 1024  # 1 MiB
+
+
+class UploadTooLargeError(ValueError):
+    """Raised when an uploaded file exceeds the configured size limit."""
+
+    pass
 
 
 @dataclass(slots=True)
@@ -19,7 +26,9 @@ class AudioMetadata:
     duration_seconds: int | None = None
 
 
-async def store_audio_file(upload: UploadFile, media_root: Path) -> Path:
+async def store_audio_file(
+    upload: UploadFile, media_root: Path, *, max_bytes: int | None = None
+) -> Path:
     """Persist an uploaded audio file to disk and return its path."""
 
     media_root.mkdir(parents=True, exist_ok=True)
@@ -27,14 +36,28 @@ async def store_audio_file(upload: UploadFile, media_root: Path) -> Path:
     filename = f"{uuid4().hex}{suffix}"
     destination = media_root / filename
 
-    with destination.open("wb") as buffer:
-        while True:
-            chunk = await upload.read(_CHUNK_SIZE)
-            if not chunk:
-                break
-            buffer.write(chunk)
+    await upload.seek(0)
 
-    await upload.close()
+    def _copy_to_disk() -> None:
+        written = 0
+        with destination.open("wb") as buffer:
+            while True:
+                chunk = upload.file.read(_CHUNK_SIZE)
+                if not chunk:
+                    break
+                written += len(chunk)
+                if max_bytes is not None and written > max_bytes:
+                    raise UploadTooLargeError("Uploaded file exceeds allowed size")
+                buffer.write(chunk)
+
+    try:
+        await run_in_threadpool(_copy_to_disk)
+    except UploadTooLargeError:
+        destination.unlink(missing_ok=True)
+        raise
+    finally:
+        await upload.close()
+
     return destination
 
 
