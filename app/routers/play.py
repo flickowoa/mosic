@@ -112,7 +112,7 @@ async def stream_song(song_id: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Audio file not found")
 
     await PlayCount.increment_count(db, song_id)
-    STREAMS_BY_CLIP.labels(song_id=song_id).inc()
+    STREAMS_BY_CLIP.labels(song_id=song_id, title=song.title).inc()
 
     media_type, _ = mimetypes.guess_type(file_path.name)
 

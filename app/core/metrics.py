@@ -15,5 +15,5 @@ REQUEST_LATENCY = Histogram(
 STREAMS_BY_CLIP = Counter(
     "mosic_streams_total",
     "Stream requests per clip",
-    ["song_id"],
+    ["song_id", "title"],
 )
