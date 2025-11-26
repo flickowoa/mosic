@@ -4,7 +4,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import FileResponse
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
@@ -116,8 +116,13 @@ async def stream_song(song_id: str, db: AsyncSession = Depends(get_db)):
 
     media_type, _ = mimetypes.guess_type(file_path.name)
 
-    return FileResponse(
-        path=file_path,
-        media_type=media_type or "application/octet-stream",
-        filename=file_path.name,
+    def iterfile():
+        with file_path.open("rb") as f:
+            while chunk := f.read(1024 * 1024):
+                yield chunk
+
+    return StreamingResponse(
+        iterfile(),
+        media_type=media_type or "music/mpeg",
+        headers={"Content-Disposition": f'attachment; filename="{file_path.name}"'},
     )
