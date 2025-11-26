@@ -7,6 +7,8 @@ from app.core.db import Base
 
 from pydantic import BaseModel, ConfigDict
 
+from app.core.metrics import STREAMS_BY_CLIP
+
 
 class PlayCount(Base):
     __tablename__ = "play_counts"
@@ -40,6 +42,10 @@ class PlayCount(Base):
             session.add(playcount)
 
         await session.commit()
+
+        STREAMS_BY_CLIP.labels(song_id=playcount.id, title=song.title).set(
+            playcount.count
+        )
 
 
 # FASTAPI VIEWS
