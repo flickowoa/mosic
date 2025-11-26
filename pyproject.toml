@@ -15,7 +15,7 @@ asyncpg = "^0.31.0"
 pydantic = "^2.12.4"
 pydantic-settings = "^2.12.0"
 mutagen = "^1.47.0"
-starlette-exporter = "^0.21.0"
+starlette-exporter = "^0.23.0"
 
 [tool.poetry.group.dev.dependencies]
 alembic = "^1.17.2"
