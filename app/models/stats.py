@@ -29,7 +29,9 @@ class PlayCount(Base):
         return playcount
 
     @classmethod
-    async def increment_count(cls, session: AsyncSession, playcount_id: str) -> int:
+    async def increment_count(
+        cls, session: AsyncSession, playcount_id: str, song_title: str
+    ) -> int:
         stmt = select(cls).where(cls.id == playcount_id).with_for_update()
         result = await session.execute(stmt)
         playcount = result.scalar_one_or_none()
@@ -41,10 +43,12 @@ class PlayCount(Base):
             playcount.count += 1
             session.add(playcount)
 
+        current_count = playcount.count
+
         await session.commit()
 
-        STREAMS_BY_CLIP.labels(song_id=playcount.id, title=song.title).set(
-            playcount.count
+        STREAMS_BY_CLIP.labels(song_id=playcount_id, title=song_title).set(
+            current_count
         )
 
 
