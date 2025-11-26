@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
+from app.core.metrics import STREAMS_BY_CLIP
 
 from pydantic import BaseModel, ConfigDict
 
@@ -27,7 +28,9 @@ class PlayCount(Base):
         return playcount
 
     @classmethod
-    async def increment_count(cls, session: AsyncSession, playcount_id: str) -> None:
+    async def increment_count(
+        cls, session: AsyncSession, playcount_id: str, song_title: str
+    ) -> None:
         stmt = select(cls).where(cls.id == playcount_id).with_for_update()
         result = await session.execute(stmt)
         playcount = result.scalar_one_or_none()
@@ -40,6 +43,9 @@ class PlayCount(Base):
             session.add(playcount)
 
         await session.commit()
+        STREAMS_BY_CLIP.labels(song_id=playcount_id, title=song_title).set(
+            playcount.count
+        )
 
 
 # FASTAPI VIEWS

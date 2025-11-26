@@ -1,4 +1,4 @@
-from prometheus_client import Counter, Histogram
+from prometheus_client import Counter, Gauge, Histogram
 
 TOTAL_API_REQUESTS = Counter(
     "mosic_api_requests_total",
@@ -12,8 +12,8 @@ REQUEST_LATENCY = Histogram(
     ["method", "path"],
 )
 
-STREAMS_BY_CLIP = Counter(
+STREAMS_BY_CLIP = Gauge(
     "mosic_streams_total",
-    "Stream requests per clip",
+    "Persisted stream count per clip",
     ["song_id", "title"],
 )
