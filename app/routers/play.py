@@ -107,11 +107,12 @@ async def upload_song(
 async def stream_song(song_id: str, db: AsyncSession = Depends(get_db)):
     song = await Song.get_by_id(db, song_id)
     file_path = settings.media_path / Path(song.audio_url).name
+    song_title = song.title
 
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Audio file not found")
 
-    await PlayCount.increment_count(db, song_id)
+    await PlayCount.increment_count(db, song_id, song_title)
     #
 
     media_type, _ = mimetypes.guess_type(file_path.name)
