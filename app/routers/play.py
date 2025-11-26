@@ -124,5 +124,4 @@ async def stream_song(song_id: str, db: AsyncSession = Depends(get_db)):
     return StreamingResponse(
         iterfile(),
         media_type=media_type or "music/mpeg",
-        headers={"Content-Disposition": f'attachment; filename="{file_path.name}"'},
     )
