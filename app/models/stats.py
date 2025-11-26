@@ -40,7 +40,6 @@ class PlayCount(Base):
             session.add(playcount)
 
         await session.commit()
-        return playcount.count
 
 
 # FASTAPI VIEWS
