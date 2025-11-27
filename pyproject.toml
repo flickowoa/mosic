@@ -19,6 +19,7 @@ starlette-exporter = "^0.23.0"
 
 [tool.poetry.group.dev.dependencies]
 alembic = "^1.17.2"
+ruff = "^0.14.6"
 
 [tool.poetry.group.test]
 [tool.poetry.group.test.dependencies]
@@ -28,6 +29,15 @@ pytest-postgresql = "^7.0.2"
 psycopg = "^3.2.13"
 httpx = "^0.27.2"
 aiosqlite = "^0.20.0"
+
+
+[tool.ruff]
+target-version = "py313"
+line-length = 120
+extend-exclude = ["media", "alembic"]
+
+[tool.ruff.lint]
+select = ["E", "F"]
 
 
 [build-system]
