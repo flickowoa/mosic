@@ -1,5 +1,4 @@
 from sqlalchemy import String, select, Integer
-from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 

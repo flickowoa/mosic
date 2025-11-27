@@ -17,7 +17,6 @@ from app.core.media import (
     store_audio_file,
     UploadTooLargeError,
 )
-from app.core.metrics import STREAMS_BY_CLIP
 
 router = APIRouter(
     prefix="/play",
