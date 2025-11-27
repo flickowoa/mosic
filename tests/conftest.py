@@ -14,6 +14,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from starlette.routing import Mount
 
+from app.core.auth import API_KEY_HEADER_NAME
 from app.core.config import settings
 from app.core.db import Base, get_db, sessionmanager
 from app.main import app as fastapi_app
@@ -72,6 +73,9 @@ async def client(
     original_media_root = settings.MEDIA_ROOT
     original_media_path = settings.media_path
 
+    original_api_key = settings.API_KEY
+    settings.API_KEY = "test-api-key"
+
     settings.MEDIA_ROOT = str(tmp_path / "media")
     media_path = settings.media_path
     media_path.mkdir(parents=True, exist_ok=True)
@@ -79,7 +83,9 @@ async def client(
 
     transport = ASGITransport(app=fastapi_app)
     async with AsyncClient(
-        transport=transport, base_url="http://testserver"
+        transport=transport,
+        base_url="http://testserver",
+        headers={API_KEY_HEADER_NAME: settings.API_KEY},
     ) as test_client:
         yield test_client
 
@@ -87,3 +93,4 @@ async def client(
     settings.MEDIA_ROOT = original_media_root
     _update_media_mount(fastapi_app, original_media_path)
     original_media_path.mkdir(parents=True, exist_ok=True)
+    settings.API_KEY = original_api_key

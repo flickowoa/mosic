@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from app.core.auth import API_KEY_HEADER_NAME
 from app.core.config import settings
 from app.models.song import Song
 from app.models.stats import PlayCount
@@ -12,6 +13,12 @@ from app.models.stats import PlayCount
 
 def _media_contents() -> list[Path]:
     return [p for p in settings.media_path.glob("*") if p.is_file()]
+
+
+@pytest.mark.anyio
+async def test_invalid_api_key_rejected(client):
+    response = await client.get("/play/", headers={API_KEY_HEADER_NAME: "bad"})
+    assert response.status_code == 401
 
 
 @pytest.mark.anyio

@@ -7,6 +7,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import require_api_key
 from app.core.db import get_db
 from app.core.config import settings
 from app.models.song import Song, SongCreateError
@@ -18,7 +19,11 @@ from app.core.media import (
 )
 from app.core.metrics import STREAMS_BY_CLIP
 
-router = APIRouter(prefix="/play", tags=["play"])
+router = APIRouter(
+    prefix="/play",
+    tags=["play"],
+    dependencies=[Depends(require_api_key)],
+)
 ALLOWED_AUDIO_TYPES = {mime.lower() for mime in settings.ALLOWED_AUDIO_MIME_TYPES}
 logger = logging.getLogger(__name__)
 

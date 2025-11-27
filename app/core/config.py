@@ -29,6 +29,7 @@ class Settings(BaseSettings):
         "audio/ogg",
     )
     DATABASE_URL_OVERRIDE: str | None = None
+    API_KEY: str = "change"
 
     @computed_field(return_type=str)
     @property
