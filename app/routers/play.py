@@ -21,20 +21,26 @@ from app.core.media import (
 router = APIRouter(
     prefix="/play",
     tags=["play"],
-    dependencies=[Depends(require_api_key)],
 )
 ALLOWED_AUDIO_TYPES = {mime.lower() for mime in settings.ALLOWED_AUDIO_MIME_TYPES}
 logger = logging.getLogger(__name__)
 
 
 @router.get("/")
-async def list_songs(db: AsyncSession = Depends(get_db)):
+async def list_songs(
+    db: AsyncSession = Depends(get_db),
+    _=Depends(require_api_key),
+):
     songs = await Song.list_all(db)
     return songs
 
 
 @router.get("/{song_id}/stats")
-async def get_song_stats(song_id: str, db: AsyncSession = Depends(get_db)):
+async def get_song_stats(
+    song_id: str,
+    db: AsyncSession = Depends(get_db),
+    _=Depends(require_api_key),
+):
     await Song.get_by_id(db, song_id)
     playcount = await PlayCount.get_by_id(db, song_id)
     return playcount
@@ -47,6 +53,7 @@ async def create_song(
     duration: int,
     audio_url: str,
     db: AsyncSession = Depends(get_db),
+    _=Depends(require_api_key),
 ):
     song = await Song.create(db, title, description, duration, audio_url)
     return song
@@ -62,6 +69,7 @@ async def upload_song(
     title: str | None = Form(None),
     description: str | None = Form(None),
     db: AsyncSession = Depends(get_db),
+    _=Depends(require_api_key),
 ):
     content_type = (file.content_type or "").lower()
     if content_type not in ALLOWED_AUDIO_TYPES:
